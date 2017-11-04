@@ -31,14 +31,6 @@ for n = 1:total_images
     %SE2 = strel('disk',1);
     bw4 = imdilate(bw3,SE3);
 
-    % SE3 = strel('disk',6);
-    % bw5 = imerode(bw4,SE3);
-    % figure(9), imshow(bw5);
-
-    % SE3 = strel('disk',1);
-    % bw5a = imdilate(bw5,SE3);
-    % figure(99), imshow(bw5a);
-
     bw6 = bwareaopen(bw4,350,8);
     %SE4 = strel('disk',2);
     %bw6 = imerode(bw5,SE4);
@@ -133,5 +125,3 @@ get(cp)
 cp.CountingMatrix
 cp.CorrectRate * 100
 cp.ErrorRate * 100
-cp.Specificity * 100
-cp.PositivePredictiveValue * 100
