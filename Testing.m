@@ -6,11 +6,14 @@ total_images = numel(filenames);
 
 for n = 1:total_images
     full_name = fullfile(image_folder, filenames(n).name);
+    
+    %preprocessing
     img = imread(full_name);
     img_gray=rgb2gray(img);
     
     cc = medfilt2(img_gray);
    
+    %Tumor Segmentation
     T = 155;
     bw = im2bw(cc,T/255);
 
@@ -75,9 +78,9 @@ for n = 1:total_images
             Ent(n) = Ent(n) - (His2(zi+1)*log2(His2(zi+1))); %Entropy
         end
     end
-
-    %Ekstraksi Ciri Tekstur Orde Dua (GLCM)
-    jarak = 1;
+    
+    %Gray Level Coocurence Matrix (GLCM) Texture Feature Extraction
+    jarak = 1; %distance beetwen pixel
     warning('off','Images:graycomatrix:scaledImageContainsNan');
     GLCM = graycomatrix(brain_glcm,'NumLevels',8, 'GrayLimits',[], 'Offset',[0 jarak; -jarak jarak; -jarak 0; -jarak -jarak]);
     stats = graycoprops(GLCM,{'contrast','homogeneity'});
@@ -102,10 +105,6 @@ t3 = [0;0;1;0]; %Metastatic
 t4 = [0;0;0;1]; %Normal
 target = [t1 t1 t1 t1 t1 t1 t2 t2 t2 t3 t3 t3 t4 t4 t4]
 target_ind = vec2ind(target);
-% target(:,1:6) = 1; %Glioma
-% target(:,7:8) = 2; %Meningioma
-% target(:,9:11) = 3; %Metastatic
-% target(:,12:15) = 4; %Normal
 
 a = 0;
 b = 255;
@@ -116,9 +115,9 @@ pa = (((ra-rb) * (input - a)) / (b - a)) + rb
 load jst
 
 output = sim(net,pa)
-testIndices = vec2ind(output)
+testIndices = vec2ind(output) %predict
 
-plotconfusion(target,output)
+plotconfusion(target,output) %testing accuracy
 output_test = testIndices.'
 cp = classperf(target_ind, output_test);
 get(cp)
