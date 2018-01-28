@@ -104,12 +104,14 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 global kelas;
 
 img = handles.img;
+
+% Preprocessing
 img_gray=rgb2gray(img);
 cc = medfilt2(img_gray);
 T = 155;
 bw = im2bw(cc,T/255);
 
-% Operasi Morfologi
+% Morphological Operation
 SE = strel('disk',2);
 bw1 = imerode(bw,SE);
 
@@ -150,7 +152,7 @@ imshow(cc_resize);
 
 [N,M,L] = size(brain1);
 
-His2 =imhist(brain1)/(N*M); %Histogram Ternormalisasi
+His2 =imhist(brain1)/(N*M); % Normalized Histogram
 
 Mean = 0;
 for zi = 0:255
@@ -173,8 +175,8 @@ for zi = 0:255
 end
 set(handles.edit3,'String',Ent);
 
-% GLCM
-jarak = 1;
+% GLCM Texture Feature Extraction
+jarak = 1; %distance beetwen pixel
 warning('off','Images:graycomatrix:scaledImageContainsNan');
 GLCM = graycomatrix(brain_glcm,'NumLevels',8, 'GrayLimits',[], 'Offset',[0 jarak; -jarak jarak; -jarak 0; -jarak -jarak]);
 stats = graycoprops(GLCM,{'contrast','homogeneity'});
@@ -208,10 +210,10 @@ norm = (((ra-rb) * (input - a)) / (b - a)) + rb
 load jst
 
 output = sim(net,norm)
-keluaran = vec2ind(output) %Mencari elemen terbesar pada vektor
+keluaran = vec2ind(output) % Find largest element in vector
 
 if keluaran == 1
-    kelas = 'Glioma';
+    kelas = 'Glioma'; %Target Class
     set(handles.edit6,'String',kelas);
     set(handles.edit6,'ForegroundColor','blue');
 elseif keluaran == 2
@@ -376,11 +378,14 @@ total_images = numel(files)
 
 for n = 1:total_images
     full_name = fullfile(d, files(n).name);
+    
+    %Prerpocessing
     img = imread(full_name);
     img_gray=rgb2gray(img);
     
     cc = medfilt2(img_gray);
     
+    %Tumor Segmentation
     T = 155;
     bw = im2bw(cc,T/255);
 
@@ -419,7 +424,7 @@ for n = 1:total_images
 
     [N,M,L] = size(brain1);
 
-    His2 =imhist(brain1)/(N*M); %Histogram Ternormalisasi
+    His2 =imhist(brain1)/(N*M); % Normalized Histogram
 
     Mean(n) = 0;
     for zi = 0:255
@@ -439,7 +444,7 @@ for n = 1:total_images
         end
     end
 
-    %Ekstraksi Ciri Tekstur Orde Dua (GLCM)
+    %%Gray Level Coocurence Matrix (GLCM) Texture Feature Extraction
     jarak = 1;
     warning('off','Images:graycomatrix:scaledImageContainsNan');
     GLCM = graycomatrix(brain_glcm,'NumLevels',8, 'GrayLimits',[], 'Offset',[0 jarak; -jarak jarak; -jarak 0; -jarak -jarak]);
@@ -474,6 +479,7 @@ ra = 0.9;
 rb = 0.1;
 pa = (((ra-rb) * (input - a)) / (b - a)) + rb
 
+%train using BPNN
 net = newff(pa,target,str2double(get(handles.edit27,'String')),{'logsig','tansig'},'traingd'); %Desain Jaringan
 % net.IW{1,1} = [-0.1920,-0.4876,-1.1113,1.3023,1.1390;...
 %     1.7783,-0.5090,-0.6322,0.8257,0.0001;...
@@ -502,7 +508,7 @@ net.performFcn = 'mse';
 net.trainParam.lr = str2double(get(handles.edit26,'String'));
 net.trainParam.goal = 0.02;
 net.divideFcn = '';
-[net, tr, Y, ee] = train(net,pa,target); %Memulai training
+[net, tr, Y, ee] = train(net,pa,target);
 output = sim(net,pa)
 trainIndices = vec2ind(output)
 
@@ -510,9 +516,9 @@ hasilbobot_hidden = net.IW{1,1}
 hasilbias_hidden = net.b{1,1}
 hasilbobot_keluaran = net.LW{2,1}
 hasilbias_keluaran = net.b{2,1}
-jumlah_iterasi = tr.num_epochs
-nilai_keluaran = Y
-nilai_error = ee
+jumlah_iterasi = tr.num_epochs %number of iteration
+nilai_keluaran = Y %output value
+nilai_error = ee %error value
 D = abs(nilai_error).^2;
 error_MSE = sum(D(:))/numel(nilai_error)
 set(handles.edit24,'String',error_MSE);
