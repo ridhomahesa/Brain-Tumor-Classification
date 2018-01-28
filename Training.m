@@ -6,11 +6,14 @@ total_images = numel(filenames);
 
 for n = 1:total_images
     full_name = fullfile(image_folder, filenames(n).name);
+    
+    %Preprocessing
     img = imread(full_name);
     img_gray=rgb2gray(img);
     
     cc = medfilt2(img_gray);
     
+    %Tumor Segmentation
     T = 155;
     bw = im2bw(cc,T/255);
 
@@ -64,7 +67,7 @@ for n = 1:total_images
 
     [N,M,L] = size(brain1);
 
-    His2 =imhist(brain1)/(N*M); %Histogram Ternormalisasi
+    His2 =imhist(brain1)/(N*M); %Normalized Histogram
 
     Mean(n) = 0;
     for zi = 0:255
@@ -84,8 +87,8 @@ for n = 1:total_images
         end
     end
 
-    %Ekstraksi Ciri Tekstur Orde Dua (GLCM)
-    jarak = 1;
+    %Gray Level Coocurence Matrix (GLCM) Texture Feature Extraction
+    jarak = 1; %distance beetwen pixel
     warning('off','Images:graycomatrix:scaledImageContainsNan');
     GLCM = graycomatrix(brain_glcm,'NumLevels',8, 'GrayLimits',[], 'Offset',[0 jarak; -jarak jarak; -jarak 0; -jarak -jarak]);
     stats = graycoprops(GLCM,{'contrast','homogeneity'});
@@ -112,7 +115,7 @@ t3 = [0;0;1;0]; %Metastatic
 t4 = [0;0;0;1]; %Normal
 target = [t1 t1 t1 t1 t1 t1 t1 t1 t1 t1 t1 t1 t1 t2 t2 t2 t3 t3 t3 t3 t3 t3 t3 t4 t4 t4 t4 t4 t4 t4 t4 t4 t4 t4 t4]
 
-rng(27); %yg ini traingd
+rng(27); %generate random number for initial random weight and bias
 
 a = 0;
 b = 255;
@@ -137,17 +140,17 @@ net.divideFcn = '';
 [net, tr, Y, ee] = train(net,pa,target);
 
 output = sim(net,pa)
-trainIndices = vec2ind(output)
+trainIndices = vec2ind(output) %predict
 
 hasilbobot_hidden = net.IW{1,1}
 hasilbias_hidden = net.b{1,1}
 hasilbobot_keluaran = net.LW{2,1}
 hasilbias_keluaran = net.b{2,1}
-jumlah_iterasi = tr.num_epochs
-nilai_keluaran = Y
-nilai_error = ee
+jumlah_iterasi = tr.num_epochs %number iteration
+nilai_keluaran = Y %output value
+nilai_error = ee %error value
 D = abs(nilai_error).^2;
 error_MSE = sum(D(:))/numel(nilai_error)
-plotperform(tr)
+plotperform(tr) %accuracy
 
 save jst.mat net
